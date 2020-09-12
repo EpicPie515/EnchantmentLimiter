@@ -17,20 +17,43 @@ public class EnchantmentLimiter extends JavaPlugin {
 	
 	private Map<Enchantment, Integer> limits;
 	
+	private boolean useNamespacedNames = true;
+	
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
 		limits = new HashMap<>();
+		try {
+			Class.forName("org.bukkit.NamespacedKey");
+		} catch(ClassNotFoundException e) {
+			useNamespacedNames = false;
+		}
 		reloadLimits();
 		getServer().getPluginManager().registerEvents(new EnchantListener(this), this);
 		getLogger().info(getDescription().getName() + " v" + getDescription().getVersion() + " enabled.");
+	}
+	
+	public String enchantName(Enchantment en) {
+		if(useNamespacedNames) {
+			return en.getKey().getKey();
+		} else {
+			return en.getName().toLowerCase();
+		}
+	}
+	
+	public Enchantment getEnchant(String name) {
+		if(useNamespacedNames) {
+			return Enchantment.getByKey(NamespacedKey.minecraft(name));
+		} else {
+			return Enchantment.getByName(name.toUpperCase());
+		}
 	}
 	
 	public void reloadLimits() {
 		ConfigurationSection ench = getConfig().getConfigurationSection("enchant-limits");
 		Map<Enchantment, Integer> limitsTemp = new HashMap<>();
 		for(String k : ench.getKeys(false)) {
-			Enchantment en = Enchantment.getByKey(NamespacedKey.minecraft(k));
+			Enchantment en = getEnchant(k);
 			if(en == null) {
 				getLogger().severe("Unknown enchantment: '" + k + "' in EnchantmentLimiter configuration.");
 				return;
@@ -43,7 +66,7 @@ public class EnchantmentLimiter extends JavaPlugin {
 	
 	public void setLimit(Enchantment ench, int limit) {
 		limits.put(ench, limit);
-		getConfig().set("enchant-limits." + ench.getKey().getKey(), limit);
+		getConfig().set("enchant-limits." + enchantName(ench), limit);
 		saveConfig();
 	}
 	
@@ -68,7 +91,7 @@ public class EnchantmentLimiter extends JavaPlugin {
 					}
 					sendMsg(p, "&9&m========================");
 					limits.forEach((en, lv) -> {
-						sendMsg(p, getConfig().getString("messages.enchantlimit").replace("{0}", en.getKey().getKey()).replace("{1}", lv + (lv == 0 ? "&7 (&cDisabled&7)" : "")));
+						sendMsg(p, getConfig().getString("messages.enchantlimit").replace("{0}", enchantName(en)).replace("{1}", lv + (lv == 0 ? "&7 (&cDisabled&7)" : "")));
 					});
 					if(p.hasPermission("enchantlimiter.version")) sendMsg(p, "&7" + getDescription().getName() + " v" + getDescription().getVersion() + " by KJNine");
 					sendMsg(p, "&9&m========================");
@@ -85,7 +108,7 @@ public class EnchantmentLimiter extends JavaPlugin {
 				}
 				sendMsg(sender, "&9&m========================");
 				limits.forEach((en, lv) -> {
-					sendMsg(sender, getConfig().getString("messages.enchantlimit").replace("{0}", en.getKey().getKey()).replace("{1}", lv + (lv == 0 ? "&7 (&cDisabled&7)" : "")));
+					sendMsg(sender, getConfig().getString("messages.enchantlimit").replace("{0}", enchantName(en)).replace("{1}", lv + (lv == 0 ? "&7 (&cDisabled&7)" : "")));
 				});
 				sendMsg(sender, "&7" + getDescription().getName() + " v" + getDescription().getVersion() + " by KJNine");
 				sendMsg(sender, "&9&m========================");
