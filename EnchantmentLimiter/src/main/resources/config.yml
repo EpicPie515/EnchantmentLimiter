@@ -1,0 +1,18 @@
+ # This plugin will only limit enchants on new items being
+# enchanted from an enchanting table/anvil. Existing items
+# must be dealt with manually.
+
+# Set to 0 to disable the enchant.
+# Set to -1 (or remove/comment from the list) to not limit.
+# Any other number will set the maximum attainable enchant.
+# These enchant names are the 1.13+ minecraft enchant names, without the 'minecraft:' prefix.
+enchant-limits:
+    sharpness: 2
+    knockback: 0
+    fire_aspect: 1
+    protection: 2
+
+# Language support
+messages:
+   no-permission: '&cYou do not have permission to perform this command. Please contact an administrator if you believe this is in error.'
+   enchantlimit: '&7- &d{0}&7 Limit: &bLevel {1}' # /enchantlimit command will show all loaded enchant limits from this config.

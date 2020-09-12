@@ -1,0 +1,17 @@
+name: EnchantmentLimiter
+main: net.kjnine.enchantmentlimiter.EnchantmentLimiter
+version: 1.0.0
+author: KJNine
+api-version: '1.16'
+commands:
+    enchantlimiter:
+        description: View and manage enchant limits.
+        aliases: [enchlimiter, enchantlimit, enchlimit, enchantmentlimiter]
+        permission: enchantlimiter.view
+permissions:
+    enchantlimiter.manage:
+        description: Allows command to reload the config file.
+        default: op
+    enchantlimiter.view:
+        description: Allows command to view enchant limits.
+        default: true
