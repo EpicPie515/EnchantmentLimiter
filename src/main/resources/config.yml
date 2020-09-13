@@ -5,12 +5,15 @@
 # Set to 0 to disable the enchant.
 # Set to -1 (or remove/comment from the list) to not limit.
 # Any other number will set the maximum attainable enchant.
-# These enchant names are the 1.13+ minecraft enchant names, without the 'minecraft:' prefix.
+# In 1.13+ servers, other plugins' custom enchants can be added to this list using the format <plugin name>:<enchant name>
 enchant-limits:
     sharpness: 2
     knockback: 0
     fire_aspect: 1
     protection: 2
+    
+# Automatically place lapis in enchant tables (1.8+)
+auto-lapis: false
 
 # Language support
 messages:

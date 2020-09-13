@@ -11,52 +11,59 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.cryptomorin.xseries.XEnchantment;
+import com.cryptomorin.xseries.XMaterial;
+
 import net.md_5.bungee.api.ChatColor;
 
 public class EnchantmentLimiter extends JavaPlugin {
 	
 	private Map<Enchantment, Integer> limits;
 	
-	private boolean useNamespacedNames = true;
+	public boolean autoLapis = false;
 	
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
 		limits = new HashMap<>();
-		try {
-			Class.forName("org.bukkit.NamespacedKey");
-		} catch(ClassNotFoundException e) {
-			useNamespacedNames = false;
-		}
 		reloadLimits();
 		getServer().getPluginManager().registerEvents(new EnchantListener(this), this);
+		try {
+			// Force throw an exception if the version is before EnchantmentOffer was added.
+			Class.forName("org.bukkit.enchantments.EnchantmentOffer");
+			// No Exception thrown, Register the listener.
+			getServer().getPluginManager().registerEvents(new PrepareEnchantListener(this), this);
+		} catch(ClassNotFoundException e) { }
 		getLogger().info(getDescription().getName() + " v" + getDescription().getVersion() + " enabled.");
 	}
 	
 	public String enchantName(Enchantment en) {
-		if(useNamespacedNames) {
-			return en.getKey().getKey();
-		} else {
-			return en.getName().toLowerCase();
+		if(XMaterial.isNewVersion()) {
+			if(!en.getKey().getNamespace().equals(NamespacedKey.MINECRAFT)) return en.getKey().getKey().toLowerCase();
 		}
+		return XEnchantment.matchXEnchantment(en).getVanillaName().toLowerCase();
 	}
 	
+	@SuppressWarnings("deprecation")
 	public Enchantment getEnchant(String name) {
-		if(useNamespacedNames) {
-			return Enchantment.getByKey(NamespacedKey.minecraft(name));
-		} else {
-			return Enchantment.getByName(name.toUpperCase());
+		if(name.contains(":") && XMaterial.isNewVersion() && !name.split(":")[0].equalsIgnoreCase("minecraft")) {
+			String[] spl = name.split(":");
+			return Enchantment.getByKey(new NamespacedKey(spl[0], spl[1]));
 		}
+		XEnchantment xen = XEnchantment.matchXEnchantment(name).orElseGet(() -> null);
+		if(xen == null) return null;
+		return xen.parseEnchantment();
 	}
 	
 	public void reloadLimits() {
+		autoLapis = getConfig().getBoolean("auto-lapis");
 		ConfigurationSection ench = getConfig().getConfigurationSection("enchant-limits");
 		Map<Enchantment, Integer> limitsTemp = new HashMap<>();
 		for(String k : ench.getKeys(false)) {
 			Enchantment en = getEnchant(k);
 			if(en == null) {
-				getLogger().severe("Unknown enchantment: '" + k + "' in EnchantmentLimiter configuration.");
-				return;
+				getLogger().severe("Config Reload - Unknown enchantment: '" + k + "'");
+				continue;
 			}
 			limitsTemp.put(en, ench.getInt(k));
 		}
